@@ -7,7 +7,7 @@
 //  - Zonder tokens (onder de 18, zonder internet of account) draait het toestel zelf, met dezelfde tabel.
 //  - Twee manieren: als spel (start(), in #spelInhoud van spel.html) en als wachtspelletje in een kleiner vak
 //    (maakFruitautomaat(host, { casino, server }), wachtspellen.js).
-import * as F from './fruitautomaat.js?v=1'
+import * as F from './fruitautomaat.js?v=2'
 import { zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=23'
 import { supabase } from './supabase.js?v=95'
 
@@ -50,9 +50,9 @@ function zetStijl() {
 .fa-saldo.min{color:#ff8fa3}
 .fa-wissel{padding:5px 10px;border-radius:999px;border:1px solid #c084fc88;background:transparent;color:#c084fc;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .fa-wissel[hidden],.fa-fiches[hidden]{display:none}
-.fa-fiches{display:flex;gap:8px;justify-content:center}
-.fa-fiche{width:44px;height:44px;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
-.fa-fiche:nth-child(2){background:#0f9f6e}.fa-fiche:nth-child(3){background:#d1453f}.fa-fiche:nth-child(4){background:#1f1f2e}
+.fa-fiches{display:flex;gap:6px;justify-content:center}
+.fa-fiche{width:44px;height:44px;padding:0;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
+.fa-fiche[data-inzet='5']{background:#5b6b86}.fa-fiche[data-inzet='25']{background:#0f9f6e}.fa-fiche[data-inzet='50']{background:#d1453f}.fa-fiche[data-inzet='100']{background:#1f1f2e}
 .fa-fiche.gekozen{outline:3px solid #facc15;outline-offset:2px}.fa-fiche:disabled{opacity:.3;cursor:not-allowed}
 .fa-melding{min-height:22px;font-weight:800;font-size:15px}
 .fa-melding.goud{color:#fde68a;text-shadow:0 0 12px #facc1588}
@@ -90,6 +90,8 @@ export function maakFruitautomaat(host, { casino = null, server = casino ? F.maa
     s.textContent = metTokens ? '🪙 ' + getal(saldo) : casino ? T('Zonder tokens') : ''   // onder de 18 niets over tokens
     s.classList.toggle('min', metTokens && saldo < 0)
     const w = $('.fa-wissel'); w.hidden = saldo === null; w.textContent = metTokens ? T('Zonder tokens') : T('Met tokens'); w.disabled = bezig
+    // past je gekozen fiche niet meer (je zou onder -100 komen), dan de grootste die nog wel kan
+    if (metTokens && saldo - inzet < -100) { const ok = F.INZETTEN.filter(n => saldo - n >= -100); if (ok.length) inzet = ok[ok.length - 1] }
     const f = $('.fa-fiches'); f.hidden = !metTokens
     f.innerHTML = F.INZETTEN.map(n => '<button type="button" class="fa-fiche' + (n === inzet ? ' gekozen' : '') + '" data-inzet="' + n + '"' + (bezig || saldo - n < -100 ? ' disabled' : '') + ' aria-label="' + esc(T('Inzet') + ' ' + n) + '">' + n + '</button>').join('')
     for (const b of f.querySelectorAll('.fa-fiche')) b.onclick = () => { inzet = Number(b.dataset.inzet); try { localStorage.setItem('fibro_fruitautomaat_inzet', String(inzet)) } catch (e) {} ; teken() }

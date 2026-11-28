@@ -4,7 +4,8 @@
 # sql/casino-volwassen.sql)
 #  A. 18+ (geboren 1990): spel.html?spel=fruitautomaat met je saldo 🪙 250; Draai gaat naar de server
 #     (fruitautomaat_draai, inzet 10); de rollen van de server (🔔 🔔 🔔), "+390" en het nieuwe saldo 🪙 640
-#  B. 18+: Hoger of lager met tokens: ⬆ Hoger zet in bij de server (casino_inzet, spel hogerlager) en stuurt de uitslag
+#  B. 18+: Hoger of lager met tokens (28 nov 2026, v3): de server deelt de kaart (hogerlager_deel: een 8), op de knoppen
+#     staat wat je wint (2,06×); ⬆ Hoger gaat naar hogerlager_raad (keuze hoger, inzet 10) en je ziet +10; fiches 5 tot 100
 #  C. onder de 18 (geboren 2010): de Fruitautomaat zonder iets over tokens (geen saldo, geen fiches, geen wisselknop,
 #     niets in de spelregels) en niets naar de server; Poker tegen de computer zonder inzetscherm
 #  D. onder de 18: de casino-widget staat niet op Home (ook niet als hij er al op stond)
@@ -32,6 +33,10 @@ def supabase(route, u, body):
             return route.fulfill(status=200, json={'saldo': STAND['saldo'], 'inzet': body.get('p_inzet'), 'al': False})
         if naam == 'casino_uitslag': return route.fulfill(status=200, json={'saldo': STAND['saldo']})
         if naam == 'casino_mag_hier': return route.fulfill(status=200, json=body.get('p_vriend') == OUD)
+        if naam == 'hogerlager_deel': return route.fulfill(status=200, json={'ronde_id': body.get('p_ronde_id'), 'kaart': 'h8', 'al': False})
+        if naam == 'hogerlager_raad':
+            STAND['saldo'] += 10
+            return route.fulfill(status=200, json={'kaart': 'h8', 'volgende': 'sH', 'keuze': body.get('p_keuze'), 'inzet': body.get('p_inzet'), 'uitslag': 'winst', 'uitbetaling': 20, 'saldo': STAND['saldo'], 'al': False})
     if '/auth/v1/user' in u: return route.fulfill(status=200, json=s_oud['user'])
 def met_jaar(jaar):
     s = sessie(UID); s['user']['user_metadata']['geboortejaar'] = jaar; return s
@@ -51,7 +56,7 @@ try:
         ctx = context(b); nep_supabase(ctx, supabase); inloggen(ctx, s_oud)
         pg = nieuwe_pagina(ctx, 'fruit'); pg.goto(BASIS + 'spel.html?spel=fruitautomaat&titel=1')
         check(peil(pg, "(document.querySelector('.fa-saldo')?.textContent || '').includes('250')"), 'A de Fruitautomaat met je saldo 🪙 250')
-        check(pg.locator('.fa-fiche').count() == 4 and pg.locator('.fa-wissel').is_visible(), 'A de fiches en de wisselknop')
+        check(pg.locator('.fa-fiche').count() == 5 and pg.locator('.fa-wissel').is_visible(), 'A de fiches en de wisselknop')
         check('Fruitautomaat' in pg.inner_text('#spelTitelBar'), 'A de naam in de titelbalk')
         pg.click('.fa-knop[data-naam=draai]')
         check(peil(pg, "(document.querySelector('.fa-melding')?.textContent || '').includes('+390')", 8000), 'A drie bellen van de server: +390 (%s)' % pg.inner_text('.fa-melding'))
@@ -66,12 +71,15 @@ try:
         STAND['saldo'] = 250; RPC.clear()
         pg = nieuwe_pagina(ctx, 'hogerlager'); pg.goto(BASIS + 'spel.html?spel=hogerlager&titel=1')
         check(peil(pg, "(document.querySelector('.hl-saldo')?.textContent || '').includes('250')"), 'B Hoger of lager met je saldo')
+        check(peil(pg, "document.querySelector('.hl-nu')?.getAttribute('aria-label') && (document.querySelector('.hl-knop[data-naam=hoger]')?.textContent || '').includes('2,06×')", 8000),
+              'B de kaart van de server (een 8) en 2,06× op de knop (%s)' % pg.inner_text('.hl-knop[data-naam=hoger]'))
+        check(pg.evaluate("[...document.querySelectorAll('.hl-fiche')].map(b => +b.dataset.inzet).join()") == '5,10,25,50,100', 'B de fiches 5 tot 100')
         pg.click('.hl-knop[data-naam=hoger]')
-        check(peil(pg, "document.querySelector('.hl-knop[data-naam=hoger]')?.textContent === 'Nieuwe kaart'", 8000), 'B de kaart is omgedraaid')
-        i = [b_ for n, b_ in RPC if n == 'casino_inzet']
-        check(len(i) == 1 and i[0].get('p_spel') == 'hogerlager' and i[0].get('p_inzet') == 10, 'B ingezet bij de server als hogerlager (%s)' % i)
-        pg.wait_for_timeout(1500)
-        check('casino_uitslag' in namen(), 'B de uitslag naar de server (%s)' % namen())
+        check(peil(pg, "document.querySelector('.hl-knop[data-naam=hoger]')?.textContent === 'Nieuwe kaart' && (document.querySelector('.hl-melding')?.textContent || '').includes('+10')", 8000),
+              'B goed geraden: +10 (%s)' % pg.inner_text('.hl-melding'))
+        rd = [b_ for n, b_ in RPC if n == 'hogerlager_raad']
+        check(len(rd) == 1 and rd[0].get('p_keuze') == 'hoger' and rd[0].get('p_inzet') == 10 and rd[0].get('p_expected_user') == UID, 'B naar de server: hoger, inzet 10 (%s)' % rd)
+        check('casino_inzet' not in namen(), 'B niet meer via casino_inzet (dat gaf altijd 2×)')
         pg.close(); ctx.close()
         # ── C ── onder de 18
         RPC.clear()
@@ -115,7 +123,7 @@ try:
             q.click('.ws-knop[data-spel=fruitautomaat]')
             check(peil(q, "!!document.querySelector('.ws-vak .fa-knop[data-naam=draai]')", 8000), 'E de Fruitautomaat staat in het wachtscherm')
             q.wait_for_timeout(1000)
-            if tokens: check('250' in q.inner_text('.fa-saldo') and q.locator('.fa-fiche').count() == 4, 'E vriend 18+: met tokens (%s)' % q.inner_text('.fa-saldo'))
+            if tokens: check('250' in q.inner_text('.fa-saldo') and q.locator('.fa-fiche').count() == 5, 'E vriend 18+: met tokens (%s)' % q.inner_text('.fa-saldo'))
             else: check(q.inner_text('.fa-saldo').strip() == '' and q.locator('.fa-fiches').is_hidden(), 'E vriend onder de 18: zonder tokens')
             m = [b_ for n, b_ in RPC if n == 'casino_mag_hier']
             check(m and m[-1].get('p_vriend') == vriend, 'E de server is gevraagd of het mag (%s)' % m[-1:])

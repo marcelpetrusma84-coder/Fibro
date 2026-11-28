@@ -3,7 +3,7 @@
 // spelicoon/<spel>.webp (128 x 128) en komen uit de spellen zelf: zie tests/tools/spelicoon/LEESMIJ.txt.
 // Gebruikt in het spelmenu van de chat, de widgetlijst in Profiel, de spelwidget op Home en op het profiel van een vriend. Een nieuw plaatje voor een bestaand spel: verhoog VERSIE (ook in de html).
 export const VERSIE = 2
-import { STUDIO_SPELLEN, studioSpel, spelIcoon as studioIcoon } from './studio-spellen.js?v=12' // 25 nov 2026: spellen uit Stekky Studio
+import { STUDIO_SPELLEN, studioSpel, spelIcoon as studioIcoon } from './studio-spellen.js?v=13' // 25 nov 2026: spellen uit Stekky Studio
 export const SPELLEN = ['botkaaseiren', 'vieroprij', 'schaken', 'dammen', 'pong', 'pacman', 'pinball',
   'endlessrunner', 'breakout', 'swarm', 'shmup', 'flappybird', 'pesten', 'toepen', 'eenentwintigen',   // 11 nov 2026: kaartspellen uit de Store
   'koningsjacht',   // 13 nov 2026

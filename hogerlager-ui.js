@@ -1,26 +1,32 @@
-// hogerlager-ui.js - Hoger of lager (v2, 28 nov 2026, Marcel; spellen/hogerlager.md), gemaakt uit sjabloon-automaat-ui.js.
+// hogerlager-ui.js - Hoger of lager (v3, 28 nov 2026, Marcel; spellen/hogerlager.md), gemaakt uit sjabloon-automaat-ui.js.
 // De regels staan in hogerlager.js.
 //
-// In gewone woorden: je ziet een kaart; tik ⬆ Hoger of ⬇ Lager. De volgende kaart draait om. Daarna "Nieuwe kaart".
-//  - Met tokens (18+): kies 10, 25, 50 of 100; goed geraden = 2× terug, dezelfde waarde = je inzet terug (casino.js).
-//  - Zonder tokens (onder de 18, zonder internet of account) speel je gewoon voor de lol.
+// In gewone woorden: je ziet een kaart; tik ⬆ Hoger of ⬇ Lager. Op de knop staat wat je wint (bijvoorbeeld 2,06×): hoe
+// kleiner de kans, hoe meer. De volgende kaart draait om. Daarna "Nieuwe kaart". Dezelfde waarde = verloren.
+//  - Met tokens (18+): kies 5, 10, 25, 50 of 100. De SERVER deelt en betaalt uit (sql/casino-volwassen.sql), want het
+//    kan meer dan 2× zijn (v3: eerst altijd 2×, dat was te veel).
+//  - Zonder tokens (onder de 18, zonder internet of account) speel je gewoon voor de lol, met dezelfde regels.
 //  - Twee manieren: als spel (start(), in #spelInhoud van spel.html) en als wachtspelletje in een kleiner vak
 //    (maakHogerLager(host, { casino }), wachtspellen.js).
-import * as R from './hogerlager.js?v=1'
+import * as R from './hogerlager.js?v=2'
 import { kaartSvg, achterkantSvg, kaartNaam, zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=23'
-import { INZETTEN, MINIMUM, verschil } from './casino.js?v=4'
+import { INZETTEN, MINIMUM } from './casino.js?v=5'
+import { supabase } from './supabase.js?v=95'
 
 const T = (s, v) => (window.T || ((x, w) => String(x).replace(/\{(\w+)\}/g, (m, k) => (w && k in w) ? w[k] : m)))(s, v)
 Object.assign(window.FIBRO_EN ||= {}, {
-  'Hoger of lager': 'Higher or lower', '⬆ Hoger': '⬆ Higher', '⬇ Lager': '⬇ Lower', 'Nieuwe kaart': 'New card',
+  'Hoger of lager': 'Higher or lower', '⬆ Hoger · {m}': '⬆ Higher · {m}', '⬇ Lager · {m}': '⬇ Lower · {m}', 'Nieuwe kaart': 'New card',
   'Met tokens': 'With tokens', 'Zonder tokens': 'Without tokens', 'Inzet': 'Bet', 'Is de volgende kaart hoger of lager?': 'Is the next card higher or lower?',
-  'Goed geraden!': 'Well guessed!', 'Goed geraden! +{n}': 'Well guessed! +{n}', 'Dezelfde waarde: je inzet terug': 'Same value: your bet back',
-  'Dezelfde waarde!': 'Same value!', 'Helaas, mis.': 'Too bad, wrong.',
-  'Inzetten lukt nu niet. Speel zonder tokens of probeer het zo nog eens.': 'Betting does not work right now. Play without tokens or try again in a moment.',
+  'Goed geraden!': 'Well guessed!', 'Goed geraden! +{n}': 'Well guessed! +{n}', 'Dezelfde waarde: verloren.': 'Same value: you lose.',
+  'Helaas, mis.': 'Too bad, wrong.', 'De kaarten worden geschud...': 'Shuffling the cards...',
+  'Zoveel tokens heb je niet. Je kunt tot -100 staan.': "You don't have that many tokens. You can go down to -100.",
+  'De server doet het nu niet. Speel zonder tokens of probeer het zo nog eens.': "The server isn't working right now. Play without tokens or try again in a moment.",
   'Spelregels van Hoger of lager': 'Higher or lower rules', 'Spelregels': 'Rules', 'Terug': 'Back',
   'Je ziet een kaart. Raad of de volgende hoger of lager is (aas is het hoogst, 2 het laagst).': 'You see a card. Guess whether the next one is higher or lower (ace is highest, 2 lowest).',
-  'Goed geraden = gewonnen. Dezelfde waarde = gelijk. Fout = verloren.': 'Guessed right = you win. Same value = a draw. Wrong = you lose.',
-  'Met tokens (18+) krijg je bij winst je inzet dubbel terug, en bij dezelfde waarde je inzet terug.': 'With tokens (18+) you get double your bet back when you win, and your bet back on the same value.',
+  'Goed geraden = gewonnen. Fout of dezelfde waarde = verloren.': 'Guessed right = you win. Wrong or the same value = you lose.',
+  'Op de knop staat wat je wint: hoe kleiner de kans, hoe meer. Bij een 8 is het ongeveer 2×; bij een 3 "lager" meer dan 12×.': 'The button shows what you win: the smaller the chance, the more. At an 8 it is about 2×; at a 3 "lower" more than 12×.',
+  'Eerlijk gezegd: welke keuze je ook maakt, op de lange duur krijg je ongeveer 97 van elke 100 terug.': 'To be honest: whatever you choose, in the long run you get back about 97 of every 100.',
+  'Met tokens (18+) deelt de server de kaarten, zodat niemand valsspeelt. Zonder tokens speel je gewoon voor de lol.': 'With tokens (18+) the server deals the cards, so nobody can cheat. Without tokens you just play for fun.',
 })
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const wacht = ms => new Promise(k => setTimeout(k, ms))
@@ -35,9 +41,9 @@ function zetStijl() {
 .hl-saldo.min{color:#ff8fa3}
 .hl-wissel{padding:5px 10px;border-radius:999px;border:1px solid #c084fc88;background:transparent;color:#c084fc;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .hl-wissel[hidden],.hl-fiches[hidden],.hl-knop[hidden]{display:none}
-.hl-fiches{display:flex;gap:8px;justify-content:center}
-.hl-fiche{width:44px;height:44px;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
-.hl-fiche:nth-child(2){background:#0f9f6e}.hl-fiche:nth-child(3){background:#d1453f}.hl-fiche:nth-child(4){background:#1f1f2e}
+.hl-fiches{display:flex;gap:6px;justify-content:center}
+.hl-fiche{width:44px;height:44px;padding:0;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
+.hl-fiche[data-inzet='5']{background:#5b6b86}.hl-fiche[data-inzet='25']{background:#0f9f6e}.hl-fiche[data-inzet='50']{background:#d1453f}.hl-fiche[data-inzet='100']{background:#1f1f2e}
 .hl-fiche.gekozen{outline:3px solid #facc15;outline-offset:2px}.hl-fiche:disabled{opacity:.3;cursor:not-allowed}
 .hl-kaarten{display:flex;gap:14px;justify-content:center}.hl-kaarten span{display:block;width:84px}
 .hl.vol .hl-kaarten span{width:110px}
@@ -54,10 +60,12 @@ function zetStijl() {
 }
 
 // Hoger of lager in host. casino = maakCasino({ spel: 'hogerlager' }) of null (dan zonder tokens).
-//   opUitslag('winst' | 'gelijk' | 'verlies') na elke ronde (het scorebord). Geeft { el }.
-export function maakHogerLager(host, { casino = null, vol = false, opUitslag = () => {} } = {}) {
+//   opUitslag('winst' | 'verlies') na elke ronde (het scorebord). Geeft { el }.
+export function maakHogerLager(host, { casino = null, vol = false, opUitslag = () => {},
+  server = casino ? R.maakHogerLagerServer({ supabase, inzetten: INZETTEN }) : null } = {}) {
   zetKaartStijl(); zetStijl()
-  let saldo = null, metTokens = false, bezig = false, ronde = R.nieuweRonde()
+  const locale = (window.T && window.T.locale) || 'nl-NL'
+  let saldo = null, metTokens = false, bezig = false, ronde = R.nieuweRonde()   // ronde.rondeId = van de server
   let inzet = (() => { try { const n = Number(localStorage.getItem('fibro_hogerlager_inzet')); return INZETTEN.includes(n) ? n : 10 } catch (e) { return 10 } })()
 
   const doos = document.createElement('div'); doos.className = 'hl' + (vol ? ' vol' : '')
@@ -67,50 +75,71 @@ export function maakHogerLager(host, { casino = null, vol = false, opUitslag = (
     + '<button type="button" class="hl-knop licht" data-naam="uitleg" aria-label="' + esc(T('Spelregels')) + '">❓</button></div>'
   const $ = s => doos.querySelector(s)
   const melding = t => { $('.hl-melding').textContent = t }
+  const fout = e => T(e && e.reden === 'te-weinig' ? 'Zoveel tokens heb je niet. Je kunt tot -100 staan.' : 'De server doet het nu niet. Speel zonder tokens of probeer het zo nog eens.')
 
   function teken() {
     const s = $('.hl-saldo')
     s.textContent = metTokens ? '🪙 ' + saldo : casino ? T('Zonder tokens') : ''   // onder de 18 niets over tokens
     s.classList.toggle('min', metTokens && saldo < 0)
     const w = $('.hl-wissel'); w.hidden = saldo === null; w.textContent = metTokens ? T('Zonder tokens') : T('Met tokens'); w.disabled = bezig
+    // past je gekozen fiche niet meer (je zou onder -100 komen), dan de grootste die nog wel kan
+    if (metTokens && saldo - inzet < MINIMUM) { const ok = INZETTEN.filter(n => saldo - n >= MINIMUM); if (ok.length) inzet = ok[ok.length - 1] }
     const f = $('.hl-fiches'); f.hidden = !metTokens
     f.innerHTML = INZETTEN.map(n => '<button type="button" class="hl-fiche' + (n === inzet ? ' gekozen' : '') + '" data-inzet="' + n + '"' + (bezig || saldo - n < MINIMUM ? ' disabled' : '') + ' aria-label="' + esc(T('Inzet') + ' ' + n) + '">' + n + '</button>').join('')
     for (const b of f.querySelectorAll('.hl-fiche')) b.onclick = () => { inzet = Number(b.dataset.inzet); try { localStorage.setItem('fibro_hogerlager_inzet', String(inzet)) } catch (e) {} ; teken() }
-    $('.hl-nu').innerHTML = kaartSvg(ronde.kaart); $('.hl-nu').setAttribute('aria-label', kaartNaam(ronde.kaart))
+    $('.hl-nu').innerHTML = ronde.kaart ? kaartSvg(ronde.kaart) : achterkantSvg(); $('.hl-nu').setAttribute('aria-label', ronde.kaart ? kaartNaam(ronde.kaart) : '?')
     $('.hl-volgende').innerHTML = ronde.klaar ? kaartSvg(ronde.volgende) : achterkantSvg()
     $('.hl-volgende').setAttribute('aria-label', ronde.klaar ? kaartNaam(ronde.volgende) : '?')
-    $('[data-naam=hoger]').textContent = ronde.klaar ? T('Nieuwe kaart') : T('⬆ Hoger')
-    $('[data-naam=lager]').textContent = T('⬇ Lager'); $('[data-naam=lager]').hidden = ronde.klaar
+    const h = $('[data-naam=hoger]'), l = $('[data-naam=lager]')
+    const mh = ronde.kaart ? R.maal100(ronde.kaart, 'hoger') : 0, ml = ronde.kaart ? R.maal100(ronde.kaart, 'lager') : 0
+    h.textContent = ronde.klaar ? T('Nieuwe kaart') : T('⬆ Hoger · {m}', { m: R.maalTekst(mh, locale) })
+    l.textContent = T('⬇ Lager · {m}', { m: R.maalTekst(ml, locale) }); l.hidden = ronde.klaar
     for (const b of doos.querySelectorAll('.hl-knop')) b.disabled = bezig && b.dataset.naam !== 'uitleg'
-    if (!ronde.klaar && metTokens && saldo - inzet < MINIMUM) { $('[data-naam=hoger]').disabled = true; $('[data-naam=lager]').disabled = true }
+    if (!ronde.klaar) {
+      if (!mh || !ronde.kaart) h.disabled = true
+      if (!ml || !ronde.kaart) l.disabled = true
+      if (metTokens && saldo - inzet < MINIMUM) { h.disabled = true; l.disabled = true }
+    }
+  }
+  // een nieuwe kaart: met tokens van de server (nog zonder inzet), anders op het toestel
+  async function nieuw() {
+    if (bezig) return
+    bezig = true; melding(T('De kaarten worden geschud...')); kaartGeluid.schud()
+    if (metTokens) {
+      ronde = { kaart: null, klaar: false }; teken()
+      try { const d = await server.deel(); ronde = { kaart: d.kaart, rondeId: d.rondeId, klaar: false } }
+      catch (e) { metTokens = false; ronde = R.nieuweRonde(); bezig = false; melding(fout(e)); kaartGeluid.nee(); teken(); return }
+    } else ronde = R.nieuweRonde()
+    bezig = false; melding(T('Is de volgende kaart hoger of lager?')); teken()
   }
   async function kies(keuze) {
-    if (bezig || ronde.klaar) return
+    if (bezig || ronde.klaar || !ronde.kaart || !R.maal100(ronde.kaart, keuze)) return
     bezig = true; teken()
-    let pot = null
+    let plus = 0
     if (metTokens) {
-      try { pot = await casino.zetIn(inzet); saldo = pot.saldo }
-      catch (e) { bezig = false; melding(T('Inzetten lukt nu niet. Speel zonder tokens of probeer het zo nog eens.')); kaartGeluid.nee(); teken(); return }
-    }
-    ronde = R.raad(ronde, keuze)
+      try {
+        const r = await server.raad(ronde.rondeId, keuze, inzet)
+        ronde = { ...ronde, volgende: r.volgende, klaar: true, keuze, uitslag: r.uitslag, gelijk: r.gelijk }
+        saldo = r.saldo; plus = r.uitbetaling - r.inzet
+      } catch (e) { bezig = false; melding(fout(e)); kaartGeluid.nee(); teken(); return }
+    } else ronde = R.raad(ronde, keuze)
     teken()
     $('.hl-volgende').animate([{ transform: 'rotateY(90deg)' }, { transform: 'none' }], { duration: 260 })
     kaartGeluid.deel()
     await wacht(260)
-    if (pot) { casino.uitslag(pot.runId, ronde.uitslag).catch(() => {}); saldo += pot.inzet + verschil(pot.inzet, ronde.uitslag) }
-    const v = pot ? verschil(pot.inzet, ronde.uitslag) : 0
-    if (ronde.uitslag === 'winst') { melding(pot ? T('Goed geraden! +{n}', { n: v }) : T('Goed geraden!')); kaartGeluid.win(); tril([30, 40, 30]) }
-    else if (ronde.uitslag === 'gelijk') { melding(pot ? T('Dezelfde waarde: je inzet terug') : T('Dezelfde waarde!')); kaartGeluid.speciaal() }
+    if (ronde.uitslag === 'winst') { melding(metTokens ? T('Goed geraden! +{n}', { n: plus }) : T('Goed geraden!')); kaartGeluid.win(); tril([30, 40, 30]) }
+    else if (ronde.gelijk) { melding(T('Dezelfde waarde: verloren.')); kaartGeluid.verlies() }
     else { melding(T('Helaas, mis.')); kaartGeluid.verlies() }
     try { opUitslag(ronde.uitslag) } catch (e) {}
     bezig = false; teken()
   }
-  function nieuw() { if (bezig) return; ronde = R.nieuweRonde(); melding(T('Is de volgende kaart hoger of lager?')); kaartGeluid.schud(); teken() }
   function toonRegels() {
     doos.querySelector('.hl-regels')?.remove()
     const lijst = ['Je ziet een kaart. Raad of de volgende hoger of lager is (aas is het hoogst, 2 het laagst).',
-      'Goed geraden = gewonnen. Dezelfde waarde = gelijk. Fout = verloren.']
-    if (casino) lijst.push('Met tokens (18+) krijg je bij winst je inzet dubbel terug, en bij dezelfde waarde je inzet terug.')   // onder de 18: niets over tokens
+      'Goed geraden = gewonnen. Fout of dezelfde waarde = verloren.',
+      'Op de knop staat wat je wint: hoe kleiner de kans, hoe meer. Bij een 8 is het ongeveer 2×; bij een 3 "lager" meer dan 12×.']
+    if (casino) lijst.push('Eerlijk gezegd: welke keuze je ook maakt, op de lange duur krijg je ongeveer 97 van elke 100 terug.',
+      'Met tokens (18+) deelt de server de kaarten, zodat niemand valsspeelt. Zonder tokens speel je gewoon voor de lol.')   // onder de 18: niets over tokens
     const d = document.createElement('div'); d.className = 'hl-regels'
     d.innerHTML = '<div role="dialog" aria-modal="true"><div style="font-weight:800;font-size:17px;margin-bottom:8px">' + esc(T('Spelregels van Hoger of lager')) + '</div><ul>'
       + lijst.map(t => '<li>' + esc(T(t)) + '</li>').join('') + '</ul><button type="button" class="hl-knop">' + esc(T('Terug')) + '</button></div>'
@@ -120,18 +149,17 @@ export function maakHogerLager(host, { casino = null, vol = false, opUitslag = (
   $('[data-naam=hoger]').onclick = () => (ronde.klaar ? nieuw() : kies('hoger'))
   $('[data-naam=lager]').onclick = () => kies('lager')
   $('[data-naam=uitleg]').onclick = toonRegels
-  $('.hl-wissel').onclick = () => { if (bezig || saldo === null) return; metTokens = !metTokens; teken() }
+  $('.hl-wissel').onclick = () => { if (bezig || saldo === null) return; metTokens = !metTokens; nieuw() }
   host.replaceChildren(doos)
   melding(T('Is de volgende kaart hoger of lager?'))
   teken()
-  // Tokens? (18+, internet, een account; anders gewoon voor de lol)
+  // Tokens? (18+, internet, een account; anders gewoon voor de lol). Met tokens komt de kaart van de server.
   ;(async () => {
     let ov = null
-    try { ov = casino ? await casino.overzicht() : null } catch (e) {}
+    try { ov = casino && server ? await casino.overzicht() : null } catch (e) {}
     if (!ov || !doos.isConnected) return
     saldo = ov.saldo
-    if (!bezig) metTokens = true
-    teken()
+    if (!bezig && !ronde.klaar) { metTokens = true; nieuw() } else teken()
   })()
   return { el: doos }
 }

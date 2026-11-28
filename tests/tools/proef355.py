@@ -71,7 +71,7 @@ try:
         check(wacht(pg, "() => [...document.querySelectorAll('.item-titel')].some(e => e.textContent === 'Casino') && [...document.querySelectorAll('.item-titel')].some(e => e.textContent === 'Scorebord')", 12000),
               'B Casino en Scorebord staan in de Store')
         uitleg = pg.evaluate("() => [...document.querySelectorAll('.item-uitleg')].map(e => e.textContent).find(t => t.includes('casino-tokens')) || ''")
-        check('250' in uitleg, 'B met de uitleg uit widgets.js (%s)' % uitleg[:50])
+        check('500' in uitleg, 'B met de uitleg uit widgets.js (%s)' % uitleg[:50])
         pg.close()
         # ── C ── het sjabloon voor een nieuwe widget werkt
         pg = ctx.new_page(); pg.on('pageerror', lambda e: fouten.append(str(e)[:300]))

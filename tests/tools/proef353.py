@@ -59,7 +59,7 @@ try:
         pg.click('.niveau-btn[data-niveau=normaal]')
         check(wacht(pg, "() => (document.querySelector('.kt-keuze') || {}).innerText?.includes('Tegen hoeveel computers')", 8000), 'A eerst: tegen hoeveel computers')
         pg.click('.kt-keuze button[aria-label="1"]')
-        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 4", 8000), 'A dan het inzetscherm')
+        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 5", 8000), 'A dan het inzetscherm')
         pg.click('.cas-fiche[data-inzet="25"]')
         check(len(INZETTEN) == 1 and INZETTEN[0].get('p_spel') == 'pokertexasholdem' and INZETTEN[0].get('p_inzet') == 25, 'A inzet 25 naar de server (%s)' % INZETTEN)
         check(wacht(pg, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 2 && !!document.querySelector('.kt-knoppen button[data-naam=fold]') && " + RUST, 15000), 'A twee kaarten en jij bent aan de beurt')
@@ -104,7 +104,7 @@ try:
         check(('Saldo: 🪙 %d' % na) in sub, 'B het nieuwe saldo in het eindscherm (%d) (%s)' % (na, sub))
         # ── C ── opnieuw, zonder tokens
         pg.click('.kt-opnieuw')
-        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 4", 8000), 'C ↻ Opnieuw spelen: weer het inzetscherm')
+        check(wacht(pg, "() => document.querySelectorAll('.cas-fiche').length === 5", 8000), 'C ↻ Opnieuw spelen: weer het inzetscherm')
         pg.click('.cas-zonder')
         check(wacht(pg, "() => document.querySelectorAll('.kt-hand .kt-kaart').length === 2 && (document.querySelector('.pk-midden')?.innerText || '').includes('Hand 1') && !document.querySelector('.kt-einde')", 15000),
               'C zonder inzet: een nieuw potje, hand 1')

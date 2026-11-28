@@ -12,7 +12,7 @@
 // 27 nov 2026: de kaarten komen uit de kaartenmotor (kaarten-motor.js)
 import { KLEUREN, WAARDEN, maakDeck, schud, rang, isKaart as isKaart52 } from './kaarten-motor.js?v=1'
 export { KLEUREN, WAARDEN, maakDeck, schud, rang }
-export const INZETTEN = [10, 25, 50, 100]
+export const INZETTEN = [5, 10, 25, 50, 100]   // 28 nov 2026: ook 5 (zelfde als casino.js)
 // De uitbetalingstabel (Jacks or Better 9/6), van hoog naar laag
 export const TABEL = [
   { hand: 'royal', naam: 'Royal flush', maal: 250 },

@@ -13,7 +13,7 @@
 //   maal(rollen)                  hoeveel keer je inzet je terugkrijgt (0, 1, 4, 10 ... 200)
 //   terugKans()                   { terug: 0.967, winkans: 0.24 }  (uitgerekend, voor de spelregels en de test)
 //   maakFruitServer({ supabase }).draai(inzet)   { rollen, inzet, uitbetaling, saldo } (de server draait)
-export const INZETTEN = [10, 25, 50, 100]
+export const INZETTEN = [5, 10, 25, 50, 100]   // 28 nov 2026: ook 5 (zelfde als casino.js)
 export const SYMBOLEN = ['kers', 'citroen', 'sinaas', 'druif', 'bel', 'ster', 'zeven']
 export const GEWICHT = { kers: 6, citroen: 7, sinaas: 6, druif: 5, bel: 4, ster: 3, zeven: 1 }   // samen 32
 export const TABEL = { zeven: 200, ster: 60, bel: 40, druif: 20, sinaas: 15, citroen: 12, kers: 10 }

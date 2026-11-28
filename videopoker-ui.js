@@ -7,7 +7,7 @@
 //  - Met tokens deelt de SERVER (sql/videopoker.sql): hij schudt, ruilt en betaalt uit. Zo kan niemand een hand verzinnen.
 //  - Zonder tokens (of zonder internet of account) deelt het toestel zelf, met dezelfde tabel.
 //  - 💡 Tip zet de HOUDEN-vinkjes zoals een eenvoudige strategie het zou doen.
-import * as V from './videopoker.js?v=2'
+import * as V from './videopoker.js?v=3'
 import { kaartSvg, achterkantSvg, kaartNaam, zetStijl as zetKaartStijl, kaartGeluid, tril } from './kaartspel-hulp.js?v=23'
 import { supabase } from './supabase.js?v=95'
 
@@ -49,10 +49,10 @@ function zetStijl() {
 .vp-saldo{font-size:20px;font-weight:900;color:#fde68a;font-variant-numeric:tabular-nums}
 .vp-saldo.min{color:#ff8fa3}
 .vp-wissel{padding:5px 10px;border-radius:999px;border:1px solid #c084fc88;background:transparent;color:#c084fc;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
-.vp-fiches{display:flex;gap:8px}
+.vp-fiches{display:flex;gap:6px}
 .vp-fiches[hidden],.vp-wissel[hidden]{display:none}
-.vp-fiche{width:46px;height:46px;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
-.vp-fiche:nth-child(2){background:#0f9f6e}.vp-fiche:nth-child(3){background:#d1453f}.vp-fiche:nth-child(4){background:#1f1f2e}
+.vp-fiche{width:46px;height:46px;padding:0;border-radius:50%;border:3px dashed #ffffffaa;background:#8b3fd1;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #4c1d7a}
+.vp-fiche[data-inzet='5']{background:#5b6b86}.vp-fiche[data-inzet='25']{background:#0f9f6e}.vp-fiche[data-inzet='50']{background:#d1453f}.vp-fiche[data-inzet='100']{background:#1f1f2e}
 .vp-fiche.gekozen{outline:3px solid #facc15;outline-offset:2px}
 .vp-fiche:disabled{opacity:.3;cursor:not-allowed}
 .vp-kaarten{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(100%,400px);margin-top:4px}
@@ -109,6 +109,8 @@ export function start() {
     w.hidden = saldo === null
     w.textContent = metTokens ? T('Zonder tokens') : T('Met tokens')
     w.disabled = fase !== 'deel'
+    // 28 nov 2026: past je gekozen fiche niet meer (je zou onder -100 komen), dan de grootste die nog wel kan
+    if (metTokens && fase === 'deel' && saldo - inzet < -100) { const ok = V.INZETTEN.filter(n => saldo - n >= -100); if (ok.length) inzet = ok[ok.length - 1] }
     const f = $('.vp-fiches')
     f.hidden = !metTokens
     f.innerHTML = V.INZETTEN.map(n => '<button type="button" class="vp-fiche' + (n === inzet ? ' gekozen' : '') + '" data-inzet="' + n + '"' + (fase !== 'deel' || saldo - n < -100 ? ' disabled' : '') + ' aria-label="' + esc(T('Inzet') + ' ' + n) + '">' + n + '</button>').join('')

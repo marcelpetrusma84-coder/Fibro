@@ -47,6 +47,20 @@ for (const [stand, f] of veranderd) {
   const oud = nummers(basis, naam), nu = nummers(kop, naam)
   if (![...nu].some(v => !oud.has(v))) fout.push(f)   // alleen oude nummers: telefoons houden de oude kopie
 }
+// 28 nov 2026: spellen uit Studio laden hun scherm als './' + id + '-ui.js?v=' + v (studio-spellen.js). Dat staat niet
+// letterlijk in de code, dus hierboven telde het niet mee (zo bleven pokertexasholdem-ui.js en videopoker-ui.js in #294 op
+// hun oude nummer). Verandert <id>-ui.js of <id>.js, dan moet "v" van dat spel in studio-spellen.js omhoog.
+const studioV = rev => { const m = new Map(); try { for (const x of git('show', rev + ':studio-spellen.js').matchAll(/\{"id":"([a-z0-9]+)"[^\n]*?"v":(\d+)/g)) m.set(x[1], Number(x[2])) } catch (e) {} return m }
+const vOud = studioV(basis), vNu = studioV(kop), studioFout = []
+for (const [stand, f] of veranderd) {
+  const id = stand === 'M' && /^[a-z0-9]+(-ui)?\.js$/.test(f) ? f.replace(/(-ui)?\.js$/, '') : null
+  if (id && vOud.has(id) && vNu.has(id) && vNu.get(id) <= vOud.get(id)) studioFout.push(f + '   (verhoog "v" van ' + id + ' in studio-spellen.js)')
+}
+if (studioFout.length) {
+  console.log('FOUT: deze spellen uit Studio zijn veranderd, maar hun "v" in studio-spellen.js niet. Telefoons blijven dan de oude kopie gebruiken.')
+  for (const f of studioFout) console.log('  - ' + f)
+  if (!fout.length) process.exit(1)
+}
 if (fout.length) {
   console.log('FOUT: deze bestanden zijn veranderd, maar hun ?v=-nummer niet. Telefoons blijven dan de oude kopie gebruiken.')
   for (const f of fout) console.log('  - ' + f + '   (hoog het nummer op overal waar ' + path.posix.basename(f) + '?v= staat)')

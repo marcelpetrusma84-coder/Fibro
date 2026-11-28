@@ -6,7 +6,7 @@
 //
 // Koningsjacht en Neon Raiders hebben al een eigen scorebord (koningsjacht-scores.js, neon-raiders-scores.js).
 // Ghost Tag en Runner & Gunner (punten) en Twin Snakes (keer gewonnen) sinds 26 nov 2026 (avond).
-import { STUDIO_SPELLEN } from './studio-spellen.js?v=12'
+import { STUDIO_SPELLEN } from './studio-spellen.js?v=13'
 import { SCOREBORDEN, STIJLEN } from './scoreborden.js?v=1' // 26 nov 2026: per spel aan/uit en stijl uit Stekky Studio
 
 // 26 nov 2026 (avond, Marcel: "sluit maar aan"): ook Ghost Tag en Runner & Gunner (punten) en Twin Snakes (rondes
